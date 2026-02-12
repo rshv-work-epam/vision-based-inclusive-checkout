@@ -11,11 +11,11 @@ cp .env.example .env || true
 docker compose up --build -d
 ```
 
-2. Services:
-- Catalog: http://localhost:8001/health
-- Inference: http://localhost:8002/health
-- Review Tasks: http://localhost:8003/health
-- Operator Assistant: http://localhost:8004/health
+2. Services (probes):
+- Catalog: http://localhost:8001/healthz
+- Inference: http://localhost:8002/healthz
+- Review Tasks: http://localhost:8003/healthz
+- Operator Assistant: http://localhost:8004/healthz
 
 OpenTelemetry Collector listens on 4317/4318 and logs telemetry to console.
 
