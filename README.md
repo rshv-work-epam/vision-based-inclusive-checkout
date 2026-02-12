@@ -157,4 +157,3 @@ az deployment group create -g <rg> \
 - System architecture: [docs/architecture.md](docs/architecture.md)
 - Development process: [docs/process.md](docs/process.md)
 - Architectural decisions: [docs/adr](docs/adr)
-

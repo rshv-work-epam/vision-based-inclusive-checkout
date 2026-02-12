@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
@@ -36,9 +36,9 @@ class TaskCreate(BaseModel):
 
 @router.get("", response_model=List[TaskRead])
 async def list_tasks(
-    offset: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
 ) -> List[TaskRead]:
     stmt = select(Task).offset(offset).limit(limit).order_by(Task.created_at.desc())
     return session.exec(stmt).all()
@@ -46,10 +46,13 @@ async def list_tasks(
 
 @router.post("", response_model=TaskRead)
 async def create_task(
-    body: TaskCreate, session: Session = Depends(get_session)
+    body: TaskCreate,
+    session: Annotated[Session, Depends(get_session)],
 ) -> TaskRead:
     task = Task(
-        label=body.label, confidence=body.confidence, image_name=body.image_name
+        label=body.label,
+        confidence=body.confidence,
+        image_name=body.image_name,
     )
     session.add(task)
     session.commit()

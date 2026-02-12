@@ -1,4 +1,4 @@
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, File, UploadFile
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ class PredictResponse(BaseModel):
 
 
 @router.post("/predict", response_model=PredictResponse)
-async def predict(file: UploadFile = File(...)):
+async def predict(file: Annotated[UploadFile, File()]):
     # Dummy prediction stub; in real life, run model inference here
     name = (file.filename or "").lower()
     label = "apple" if "apple" in name else "product"

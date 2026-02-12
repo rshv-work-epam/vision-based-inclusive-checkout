@@ -15,7 +15,11 @@ def test_tasks_crud(tmp_path, monkeypatch):
         count0 = len(r.json())
 
         # create one
-        payload = {"label": "apple", "confidence": 0.91, "image_name": "apple.jpg"}
+        payload = {
+            "label": "apple",
+            "confidence": 0.91,
+            "image_name": "apple.jpg",
+        }
         r = client.post("/tasks", json=payload)
         assert r.status_code == 200
         created = r.json()
@@ -29,7 +33,8 @@ def test_tasks_crud(tmp_path, monkeypatch):
 
 def test_tasks_pagination_and_order(tmp_path, monkeypatch):
     monkeypatch.setenv(
-        "REVIEW_TASKS_DB_URL", f"sqlite:///{tmp_path}/test-pagination.db"
+        "REVIEW_TASKS_DB_URL",
+        f"sqlite:///{tmp_path}/test-pagination.db",
     )
     client = TestClient(app)
 

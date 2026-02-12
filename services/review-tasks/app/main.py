@@ -20,4 +20,7 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-setup_telemetry(app, service_name=os.getenv("OTEL_SERVICE_NAME", "review-tasks"))
+setup_telemetry(
+    app,
+    service_name=os.getenv("OTEL_SERVICE_NAME", "review-tasks"),
+)
