@@ -1,6 +1,7 @@
+from typing import Annotated, Any, Dict, List
+
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
-from typing import List, Dict, Any
 
 router = APIRouter(prefix="/tools", tags=["tools"])
 
@@ -8,6 +9,10 @@ router = APIRouter(prefix="/tools", tags=["tools"])
 class ToolCall(BaseModel):
     name: str
     args: Dict[str, Any] | None = None
+
+
+class SummarizeRequest(BaseModel):
+    text: str = ""
 
 
 @router.get("")
@@ -19,12 +24,15 @@ async def list_tools() -> List[Dict[str, Any]]:
 
 
 @router.post("/echo")
-async def tool_echo(payload: Dict[str, Any] = Body(default_factory=dict)) -> Dict[str, Any]:
+async def tool_echo(
+    payload: Annotated[Dict[str, Any], Body()],
+) -> Dict[str, Any]:
     return {"ok": True, "payload": payload}
 
 
 @router.post("/summarize")
-async def tool_summarize(text: str = Body(embed=True, default="")) -> Dict[str, Any]:
+async def tool_summarize(body: Annotated[SummarizeRequest, Body()]) -> Dict[str, Any]:
+    text = body.text
     snippet = (text or "").strip().split()
     summary = " ".join(snippet[:20]) + ("…" if len(snippet) > 20 else "")
     return {"summary": summary, "length": len(text or "")}

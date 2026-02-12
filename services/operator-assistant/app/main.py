@@ -1,7 +1,9 @@
 import os
+
 from fastapi import FastAPI
-from .routers import health, tools
+
 from .instrumentation import setup_telemetry
+from .routers import health, tools
 
 
 def create_app() -> FastAPI:
@@ -12,4 +14,7 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-setup_telemetry(app, service_name=os.getenv("OTEL_SERVICE_NAME", "operator-assistant"))
+setup_telemetry(
+    app,
+    service_name=os.getenv("OTEL_SERVICE_NAME", "operator-assistant"),
+)
