@@ -1,6 +1,7 @@
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
-from typing import List, Dict, Any
 
 router = APIRouter(prefix="/tools", tags=["tools"])
 
@@ -19,7 +20,9 @@ async def list_tools() -> List[Dict[str, Any]]:
 
 
 @router.post("/echo")
-async def tool_echo(payload: Dict[str, Any] = Body(default_factory=dict)) -> Dict[str, Any]:
+async def tool_echo(
+    payload: Dict[str, Any] = Body(default_factory=dict),
+) -> Dict[str, Any]:
     return {"ok": True, "payload": payload}
 
 

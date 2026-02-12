@@ -1,5 +1,7 @@
 from contextlib import contextmanager
-from sqlmodel import SQLModel, create_engine, Session
+
+from sqlmodel import Session, SQLModel, create_engine
+
 from ..core.config import settings
 
 _db_url = settings.db_url

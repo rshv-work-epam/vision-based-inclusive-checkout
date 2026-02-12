@@ -1,7 +1,9 @@
 import os
+
 from fastapi import FastAPI
-from .routers import health, predict
+
 from .instrumentation import setup_telemetry
+from .routers import health, predict
 
 
 def create_app() -> FastAPI:

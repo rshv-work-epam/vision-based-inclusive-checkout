@@ -1,8 +1,10 @@
+from datetime import datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from typing import List, Optional
-from sqlmodel import SQLModel, Field, Session, select
-from datetime import datetime
+from sqlmodel import Field, Session, SQLModel, select
+
 from ..core.db import get_session
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -43,8 +45,12 @@ async def list_tasks(
 
 
 @router.post("", response_model=TaskRead)
-async def create_task(body: TaskCreate, session: Session = Depends(get_session)) -> TaskRead:
-    task = Task(label=body.label, confidence=body.confidence, image_name=body.image_name)
+async def create_task(
+    body: TaskCreate, session: Session = Depends(get_session)
+) -> TaskRead:
+    task = Task(
+        label=body.label, confidence=body.confidence, image_name=body.image_name
+    )
     session.add(task)
     session.commit()
     session.refresh(task)

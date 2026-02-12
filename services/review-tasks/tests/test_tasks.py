@@ -1,5 +1,5 @@
-from fastapi.testclient import TestClient
 from app.main import app
+from fastapi.testclient import TestClient
 
 
 def test_tasks_crud(tmp_path, monkeypatch):
@@ -28,12 +28,18 @@ def test_tasks_crud(tmp_path, monkeypatch):
 
 
 def test_tasks_pagination_and_order(tmp_path, monkeypatch):
-    monkeypatch.setenv("REVIEW_TASKS_DB_URL", f"sqlite:///{tmp_path}/test-pagination.db")
+    monkeypatch.setenv(
+        "REVIEW_TASKS_DB_URL", f"sqlite:///{tmp_path}/test-pagination.db"
+    )
     client = TestClient(app)
 
     with client:
         for idx in range(3):
-            payload = {"label": f"item-{idx}", "confidence": 0.5 + idx / 10, "image_name": f"item-{idx}.jpg"}
+            payload = {
+                "label": f"item-{idx}",
+                "confidence": 0.5 + idx / 10,
+                "image_name": f"item-{idx}.jpg",
+            }
             response = client.post("/tasks", json=payload)
             assert response.status_code == 200
 

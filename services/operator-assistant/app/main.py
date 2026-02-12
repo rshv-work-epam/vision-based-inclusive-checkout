@@ -1,7 +1,9 @@
 import os
+
 from fastapi import FastAPI
-from .routers import health, tools
+
 from .instrumentation import setup_telemetry
+from .routers import health, tools
 
 
 def create_app() -> FastAPI:
