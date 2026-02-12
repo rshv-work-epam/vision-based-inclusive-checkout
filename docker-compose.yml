@@ -70,6 +70,18 @@ services:
     ports:
       - "8004:8080"
 
+  ui:
+    build:
+      context: ./web/ui
+      dockerfile: Dockerfile
+    depends_on:
+      - catalog
+      - inference
+      - review-tasks
+      - operator-assistant
+    ports:
+      - "3000:80"
+
 networks:
   default:
     name: vbic
