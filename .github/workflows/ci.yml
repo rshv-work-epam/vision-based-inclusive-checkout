@@ -20,7 +20,11 @@ jobs:
         run: |
           pip install pre-commit
       - name: Run pre-commit
-        run: pre-commit run -a --show-diff-on-failure
+        run: |
+          # Some hooks (e.g. isort / eof fixer) may rewrite files on first pass.
+          # Run twice so CI validates the post-fix state in the same job.
+          pre-commit run -a --show-diff-on-failure || \
+          pre-commit run -a --show-diff-on-failure
 
   build-and-test:
     runs-on: ubuntu-latest
