@@ -25,3 +25,13 @@ def test_summarize_tool():
     r = client.post("/tools/summarize", json={"text": text})
     assert r.status_code == 200
     assert "summary" in r.json()
+
+
+def test_summarize_truncates_long_text():
+    client = TestClient(app)
+    text = " ".join(f"word{i}" for i in range(35))
+    r = client.post("/tools/summarize", json={"text": text})
+    assert r.status_code == 200
+    payload = r.json()
+    assert payload["summary"].endswith("…")
+    assert payload["length"] == len(text)
