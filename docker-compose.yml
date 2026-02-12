@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector:0.100.0
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+
+  catalog:
+    build:
+      context: ./services/catalog
+      dockerfile: Dockerfile
+    env_file:
+      - .env.example
+    environment:
+      - OTEL_SERVICE_NAME=catalog
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=catalog
+    depends_on:
+      - otel-collector
+    ports:
+      - "8001:8080"
+
+  inference:
+    build:
+      context: ./services/inference
+      dockerfile: Dockerfile
+    env_file:
+      - .env.example
+    environment:
+      - OTEL_SERVICE_NAME=inference
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=inference
+    depends_on:
+      - otel-collector
+    ports:
+      - "8002:8080"
+
+  review-tasks:
+    build:
+      context: ./services/review-tasks
+      dockerfile: Dockerfile
+    env_file:
+      - .env.example
+    environment:
+      - OTEL_SERVICE_NAME=review-tasks
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=review-tasks
+    depends_on:
+      - otel-collector
+    ports:
+      - "8003:8080"
+
+  operator-assistant:
+    build:
+      context: ./services/operator-assistant
+      dockerfile: Dockerfile
+    env_file:
+      - .env.example
+    environment:
+      - OTEL_SERVICE_NAME=operator-assistant
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=operator-assistant
+    depends_on:
+      - otel-collector
+    ports:
+      - "8004:8080"
+
+networks:
+  default:
+    name: vbic

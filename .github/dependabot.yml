@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/services/catalog"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/services/inference"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/services/review-tasks"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/services/operator-assistant"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/services/catalog"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/services/inference"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/services/review-tasks"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/services/operator-assistant"
+    schedule:
+      interval: "weekly"
