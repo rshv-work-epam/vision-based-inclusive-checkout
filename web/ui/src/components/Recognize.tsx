@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState, type CSSProperties } from 'react'
+import { ChangeEvent, useEffect, useRef, useState, type CSSProperties } from 'react'
 
 type Prediction = {
   label: string
@@ -9,6 +9,7 @@ type Prediction = {
 type PredictResult = { predictions: Prediction[] }
 
 export default function Recognize() {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null)
@@ -18,12 +19,31 @@ export default function Recognize() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [taskStatus, setTaskStatus] = useState<string | null>(null)
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
+  const [webcamError, setWebcamError] = useState<string | null>(null)
 
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview)
     }
   }, [preview])
+
+  useEffect(() => {
+    if (!videoRef.current) return
+    videoRef.current.srcObject = mediaStream
+
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+    }
+  }, [mediaStream])
+
+  useEffect(() => {
+    return () => {
+      mediaStream?.getTracks().forEach((track) => track.stop())
+    }
+  }, [mediaStream])
 
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const nextFile = event.target.files?.[0] || null
@@ -60,6 +80,57 @@ export default function Recognize() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  async function startWebcam() {
+    if (mediaStream) return
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      setMediaStream(stream)
+      setWebcamError(null)
+    } catch (error) {
+      setWebcamError(error instanceof Error ? error.message : 'Could not access webcam.')
+    }
+  }
+
+  function stopWebcam() {
+    mediaStream?.getTracks().forEach((track) => track.stop())
+    setMediaStream(null)
+  }
+
+  async function captureFromWebcam() {
+    const video = videoRef.current
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const context = canvas.getContext('2d')
+    if (!context) return
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.9)
+    })
+
+    if (!blob) {
+      setWebcamError('Could not capture an image from webcam.')
+      return
+    }
+
+    const capturedFile = new File([blob], `webcam-capture-${Date.now()}.jpg`, { type: 'image/jpeg' })
+    const nextPreview = URL.createObjectURL(capturedFile)
+
+    if (preview) URL.revokeObjectURL(preview)
+
+    setFile(capturedFile)
+    setPreview(nextPreview)
+    setResult(null)
+    setError(null)
+    setTaskStatus(null)
+    setWebcamError(null)
   }
 
   async function createTask() {
@@ -119,6 +190,37 @@ export default function Recognize() {
         <p className="text-sm text-slate-600">Choose a product image. The model predicts a product label and confidence score.</p>
         <label className="block text-sm font-medium text-slate-700" htmlFor="product-image">Product image</label>
         <input id="product-image" type="file" accept="image/*" onChange={onFileChange} className="w-full rounded-lg border border-slate-200 p-2" />
+        <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p className="text-sm font-medium text-slate-700">Use webcam</p>
+          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border border-slate-200 bg-black" />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={startWebcam}
+              disabled={!!mediaStream}
+              className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Start webcam
+            </button>
+            <button
+              type="button"
+              onClick={stopWebcam}
+              disabled={!mediaStream}
+              className="rounded-lg bg-slate-500 px-3 py-2 text-sm text-white transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Stop webcam
+            </button>
+            <button
+              type="button"
+              onClick={captureFromWebcam}
+              disabled={!mediaStream}
+              className="rounded-lg bg-indigo-500 px-3 py-2 text-sm text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Capture frame
+            </button>
+          </div>
+          {webcamError && <p className="rounded-lg bg-rose-50 p-2 text-sm text-rose-700">{webcamError}</p>}
+        </div>
         <button
           disabled={!file || isSubmitting}
           onClick={submit}
