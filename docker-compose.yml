@@ -16,8 +16,8 @@ services:
       - .env.example
     environment:
       - OTEL_SERVICE_NAME=catalog
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
-      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=catalog
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=catalog
     depends_on:
       - otel-collector
     ports:
@@ -31,8 +31,8 @@ services:
       - .env.example
     environment:
       - OTEL_SERVICE_NAME=inference
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
-      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=inference
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=inference
     depends_on:
       - otel-collector
     ports:
@@ -46,8 +46,8 @@ services:
       - .env.example
     environment:
       - OTEL_SERVICE_NAME=review-tasks
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
-      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=review-tasks
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=review-tasks
     depends_on:
       - otel-collector
     ports:
@@ -61,8 +61,8 @@ services:
       - .env.example
     environment:
       - OTEL_SERVICE_NAME=operator-assistant
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
-      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.name=operator-assistant
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=operator-assistant
     depends_on:
       - otel-collector
     ports:
