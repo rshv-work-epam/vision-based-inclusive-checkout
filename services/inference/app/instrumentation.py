@@ -11,6 +11,9 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
 def setup_telemetry(app, service_name: str | None = None):
+    if os.getenv("OTEL_SDK_DISABLED", "").strip().lower() in {"true", "1", "yes"}:
+        return
+
     service_name = service_name or os.getenv("OTEL_SERVICE_NAME", "inference")
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4317")
 

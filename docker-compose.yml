@@ -35,6 +35,9 @@ services:
       - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=inference
       - VBIC_CATALOG_CSV_PATH=/app/data/catalog.csv
       - VBIC_REFERENCE_IMAGES_DIR=/app/data/images
+      # Banana (and other low-texture items) often scores slightly below 0.15 with ORB+color matching.
+      # Lowering the threshold improves live recognition; tune as needed.
+      - VBIC_MIN_CONFIDENCE=0.12
     depends_on:
       - otel-collector
     volumes:

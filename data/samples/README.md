@@ -1,4 +1,4 @@
 # Samples
 
-- images/: place sample product images for local testing
-- catalog/catalog.csv: minimal SKU dataset for `catalog` service
+- catalog.csv: minimal SKU dataset for local demos (`sku,name,price_cents`)
+- images/<sku>/: reference images per SKU used by the inference matcher

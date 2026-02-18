@@ -3,7 +3,7 @@ import { ChangeEvent, useEffect, useRef, useState, type CSSProperties } from 're
 type Prediction = {
   label: string
   confidence: number
-  box?: { x: number; y: number; w: number; h: number }
+  box?: { x: number; y: number; w: number; h: number } | null
 }
 
 type PredictResult = { predictions: Prediction[] }
@@ -15,12 +15,17 @@ export default function Recognize() {
   const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null)
   const [displayDims, setDisplayDims] = useState<{ w: number; h: number } | null>(null)
   const [result, setResult] = useState<PredictResult | null>(null)
+  const [liveEnabled, setLiveEnabled] = useState(true)
+  const [liveResult, setLiveResult] = useState<PredictResult | null>(null)
+  const [liveError, setLiveError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [taskStatus, setTaskStatus] = useState<string | null>(null)
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
   const [webcamError, setWebcamError] = useState<string | null>(null)
+  const liveBusyRef = useRef(false)
+  const liveAbortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     return () => {
@@ -44,6 +49,83 @@ export default function Recognize() {
       mediaStream?.getTracks().forEach((track) => track.stop())
     }
   }, [mediaStream])
+
+  useEffect(() => {
+    if (!mediaStream || !liveEnabled) {
+      liveAbortRef.current?.abort()
+      liveAbortRef.current = null
+      liveBusyRef.current = false
+      setLiveResult(null)
+      setLiveError(null)
+      return
+    }
+
+    let cancelled = false
+    setLiveResult(null)
+    setLiveError(null)
+
+    const id = window.setInterval(async () => {
+      if (cancelled) return
+      if (liveBusyRef.current) return
+
+      const video = videoRef.current
+      if (!video || video.videoWidth === 0 || video.videoHeight === 0) return
+
+      liveBusyRef.current = true
+      const controller = new AbortController()
+      liveAbortRef.current = controller
+
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        const context = canvas.getContext('2d')
+        if (!context) {
+          throw new Error('Could not capture a frame from webcam.')
+        }
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, 'image/jpeg', 0.9)
+        })
+        if (!blob) {
+          throw new Error('Could not capture a frame from webcam.')
+        }
+
+        const formData = new FormData()
+        formData.append('file', blob, `webcam-live-${Date.now()}.jpg`)
+        const response = await fetch('/api/inference/predict', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        })
+        if (!response.ok) {
+          throw new Error(`Inference failed (${response.status})`)
+        }
+        const data = (await response.json()) as PredictResult
+        if (!cancelled) {
+          setLiveResult(data)
+          setLiveError(null)
+        }
+      } catch (caughtError: unknown) {
+        if (!cancelled) {
+          if (caughtError instanceof DOMException && caughtError.name === 'AbortError') return
+          setLiveError(caughtError instanceof Error ? caughtError.message : 'Could not run live recognition.')
+        }
+      } finally {
+        if (!cancelled) liveBusyRef.current = false
+      }
+    }, 800)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+      liveAbortRef.current?.abort()
+      liveAbortRef.current = null
+      liveBusyRef.current = false
+    }
+  }, [liveEnabled, mediaStream])
 
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const nextFile = event.target.files?.[0] || null
@@ -164,12 +246,21 @@ export default function Recognize() {
 
   const topPrediction = result?.predictions?.[0]
   const confidencePct = topPrediction ? (topPrediction.confidence * 100).toFixed(1) : null
+  const liveTopPrediction = liveResult?.predictions?.[0] || null
+  const liveConfidencePct = liveTopPrediction ? (liveTopPrediction.confidence * 100).toFixed(1) : null
+  const liveOverlayText = (() => {
+    if (!mediaStream || !liveEnabled) return null
+    if (liveError) return `Live error: ${liveError}`
+    if (!liveResult) return 'Live recognition: starting…'
+    if (liveTopPrediction && liveConfidencePct) return `Detected: ${liveTopPrediction.label} (${liveConfidencePct}%)`
+    return 'No confident match'
+  })()
 
   const overlayStyle = (() => {
-    if (!topPrediction?.box || !imgDims || !displayDims) return null
+    const box = topPrediction?.box
+    if (!box || !imgDims || !displayDims) return null
     const sx = displayDims.w / imgDims.w
     const sy = displayDims.h / imgDims.h
-    const box = topPrediction.box
     const style: CSSProperties = {
       position: 'absolute',
       left: `${box.x * sx}px`,
@@ -192,7 +283,14 @@ export default function Recognize() {
         <input id="product-image" type="file" accept="image/*" onChange={onFileChange} className="w-full rounded-lg border border-slate-200 p-2" />
         <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <p className="text-sm font-medium text-slate-700">Use webcam</p>
-          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border border-slate-200 bg-black" />
+          <div className="relative">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border border-slate-200 bg-black" />
+            {liveOverlayText && (
+              <div className="pointer-events-none absolute left-3 top-3 max-w-[calc(100%-1.5rem)] rounded-lg bg-black/70 px-3 py-2 text-sm text-white shadow">
+                {liveOverlayText}
+              </div>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -218,6 +316,16 @@ export default function Recognize() {
             >
               Capture frame
             </button>
+            <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm text-slate-700 shadow-sm">
+              <input
+                type="checkbox"
+                checked={liveEnabled}
+                disabled={!mediaStream}
+                onChange={(event) => setLiveEnabled(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+              />
+              Live recognition
+            </label>
           </div>
           {webcamError && <p className="rounded-lg bg-rose-50 p-2 text-sm text-rose-700">{webcamError}</p>}
         </div>
