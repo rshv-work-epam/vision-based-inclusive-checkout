@@ -38,6 +38,14 @@ services:
       # Banana (and other low-texture items) often scores slightly below 0.15 with ORB+color matching.
       # Lowering the threshold improves live recognition; tune as needed.
       - VBIC_MIN_CONFIDENCE=0.12
+      # Optional: OpenAI fallback (only used when reference matching returns no predictions).
+      # Pass-through to avoid committing secrets. Example:
+      #   export VBIC_OPENAI_ENABLED=true OPENAI_API_KEY=...
+      - VBIC_OPENAI_ENABLED
+      - OPENAI_API_KEY
+      - VBIC_OPENAI_MODEL
+      - VBIC_OPENAI_MIN_CONFIDENCE
+      - VBIC_OPENAI_TIMEOUT_S
     depends_on:
       - otel-collector
     volumes:
