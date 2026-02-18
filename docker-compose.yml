@@ -33,8 +33,13 @@ services:
       - OTEL_SERVICE_NAME=inference
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=inference
+      - VBIC_CATALOG_CSV_PATH=/app/data/catalog.csv
+      - VBIC_REFERENCE_IMAGES_DIR=/app/data/images
     depends_on:
       - otel-collector
+    volumes:
+      - ./data/samples/catalog.csv:/app/data/catalog.csv:ro
+      - ./data/samples/images:/app/data/images:ro
     ports:
       - "8002:8080"
 
@@ -48,6 +53,8 @@ services:
       - OTEL_SERVICE_NAME=review-tasks
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.namespace=vbic,deployment.environment=local,service.name=review-tasks
+      # Container runs as a non-root user; /app is not writable for SQLite by default.
+      - REVIEW_TASKS_DB_URL=sqlite:////tmp/review_tasks.db
     depends_on:
       - otel-collector
     ports:

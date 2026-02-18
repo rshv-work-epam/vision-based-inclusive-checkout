@@ -1,6 +1,7 @@
 import multiprocessing
+import os
 
-bind = "0.0.0.0:8000"
+bind = os.getenv("GUNICORN_BIND", "0.0.0.0:8080")
 workers = (multiprocessing.cpu_count() * 2) + 1
 worker_class = "uvicorn.workers.UvicornWorker"
 threads = 2

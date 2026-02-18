@@ -12,6 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY gunicorn_conf.py ./
 
+EXPOSE 8080
+
 USER appuser
 ENV OTEL_TRACES_EXPORTER=otlp \
     OTEL_METRICS_EXPORTER=none \
