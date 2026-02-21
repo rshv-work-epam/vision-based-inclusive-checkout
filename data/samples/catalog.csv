@@ -2,3 +2,103 @@ sku,name,price_cents
 1001,Apple,50
 1002,Banana,30
 1003,Milk 1L,150
+2001,Golden Delicious,99
+2002,Granny Smith,136
+2003,Pink Lady,173
+2004,Red Delicious,210
+2005,Royal Gala,247
+2006,Avocado,284
+2007,Banana Dataset,321
+2008,Kiwi,358
+2009,Lemon,395
+2010,Lime,432
+2011,Mango,469
+2012,Cantaloupe,506
+2013,Galia Melon,543
+2014,Honeydew Melon,580
+2015,Watermelon,617
+2016,Nectarine,654
+2017,Orange,691
+2018,Papaya,728
+2019,Passion Fruit,765
+2020,Peach,802
+2021,Anjou,839
+2022,Conference,876
+2023,Kaiser,913
+2024,Pineapple,950
+2025,Plum,987
+2026,Pomegranate,123
+2027,Red Grapefruit,160
+2028,Satsumas,197
+2029,Bravo Apple Juice,234
+2030,Bravo Orange Juice,271
+2031,God Morgon Apple Juice,308
+2032,God Morgon Orange Juice,345
+2033,God Morgon Orange Red Grapefruit Juice,382
+2034,God Morgon Red Grapefruit Juice,419
+2035,Tropicana Apple Juice,456
+2036,Tropicana Golden Grapefruit,493
+2037,Tropicana Juice Smooth,530
+2038,Tropicana Mandarin Morning,567
+2039,Arla Ecological Medium Fat Milk,604
+2040,Arla Lactose Medium Fat Milk,641
+2041,Arla Medium Fat Milk,678
+2042,Arla Standard Milk,715
+2043,Garant Ecological Medium Fat Milk,752
+2044,Garant Ecological Standard Milk,789
+2045,Oatly Natural Oatghurt,826
+2046,Oatly Oat Milk,863
+2047,Arla Ecological Sour Cream,900
+2048,Arla Sour Cream,937
+2049,Arla Sour Milk,974
+2050,Alpro Blueberry Soyghurt,110
+2051,Alpro Vanilla Soyghurt,147
+2052,Alpro Fresh Soy Milk,184
+2053,Alpro Shelf Soy Milk,221
+2054,Arla Mild Vanilla Yoghurt,258
+2055,Arla Natural Mild Low Fat Yoghurt,295
+2056,Arla Natural Yoghurt,332
+2057,Valio Vanilla Yoghurt,369
+2058,Yoggi Strawberry Yoghurt,406
+2059,Yoggi Vanilla Yoghurt,443
+2060,Asparagus,480
+2061,Aubergine,517
+2062,Cabbage,554
+2063,Carrots,591
+2064,Cucumber,628
+2065,Garlic,665
+2066,Ginger,702
+2067,Leek,739
+2068,Brown Cap Mushroom,776
+2069,Yellow Onion,813
+2070,Green Bell Pepper,850
+2071,Orange Bell Pepper,887
+2072,Red Bell Pepper,924
+2073,Yellow Bell Pepper,961
+2074,Floury Potato,998
+2075,Solid Potato,134
+2076,Sweet Potato,171
+2077,Red Beet,208
+2078,Beef Tomato,245
+2079,Regular Tomato,282
+2080,Vine Tomato,319
+2081,Zucchini,356
+2082,Satsumas Variant 2,393
+2083,Royal Gala Variant 2,430
+2084,Granny Smith Variant 2,467
+2085,Pink Lady Variant 2,504
+2086,Orange Variant 2,541
+2087,Red Delicious Variant 2,578
+2088,Watermelon Variant 2,615
+2089,Regular Tomato Variant 2,652
+2090,Golden Delicious Variant 2,689
+2091,Kiwi Variant 2,726
+2092,Banana Variant 2,763
+2093,Conference Variant 2,800
+2094,Vine Tomato Variant 2,837
+2095,Carrots Variant 2,874
+2096,Lemon Variant 2,911
+2097,Avocado Variant 2,948
+2098,Cantaloupe Variant 2,985
+2099,Arla Natural Yoghurt Variant 2,121
+2100,Yellow Onion Variant 2,158

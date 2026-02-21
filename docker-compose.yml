@@ -38,6 +38,10 @@ services:
       # Banana (and other low-texture items) often scores slightly below 0.15 with ORB+color matching.
       # Lowering the threshold improves live recognition; tune as needed.
       - VBIC_MIN_CONFIDENCE=0.12
+      # Guardrail against false positives on "empty" frames/backgrounds.
+      - VBIC_MIN_TOP_ORB_CONFIDENCE=0.025
+      # Top candidate must be sufficiently better than runner-up.
+      - VBIC_MIN_SCORE_MARGIN=0.03
       # Optional: OpenAI fallback (only used when reference matching returns no predictions).
       # Pass-through to avoid committing secrets. Example:
       #   export VBIC_OPENAI_ENABLED=true OPENAI_API_KEY=...

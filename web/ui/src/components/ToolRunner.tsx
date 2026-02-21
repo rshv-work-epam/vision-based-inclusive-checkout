@@ -1,15 +1,42 @@
 import { useEffect, useState } from 'react'
+import type { Language } from '../App'
 
-type Props = { basePath: string }
+type Props = { basePath: string; language: Language }
 type Tool = { name: string; description?: string }
 
-export default function ToolRunner({ basePath }: Props) {
+const TEXT = {
+  uk: {
+    availableTools: 'Доступні інструменти',
+    noTools: 'Немає доступних інструментів',
+    echoPayload: 'Echo-пейлоад (JSON)',
+    runEcho: 'Запустити echo',
+    runSummarize: 'Запустити summarize',
+    summarizeText: 'Текст для стислого викладу',
+    running: 'Виконується…',
+    callFailed: 'Виклик інструмента не вдався.',
+    toolCallFailedWithCode: (code: number) => `Виклик інструмента не вдався (${code})`
+  },
+  en: {
+    availableTools: 'Available Tools',
+    noTools: 'No tools available',
+    echoPayload: 'Echo payload (JSON)',
+    runEcho: 'Run echo',
+    runSummarize: 'Run summarize',
+    summarizeText: 'Summarize text',
+    running: 'Running…',
+    callFailed: 'Tool call failed.',
+    toolCallFailedWithCode: (code: number) => `Tool call failed (${code})`
+  }
+} as const
+
+export default function ToolRunner({ basePath, language }: Props) {
   const [tools, setTools] = useState<Tool[]>([])
   const [echo, setEcho] = useState('')
   const [text, setText] = useState('')
   const [result, setResult] = useState<unknown>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const t = TEXT[language]
 
   useEffect(() => {
     fetch(`${basePath}/tools`)
@@ -24,11 +51,11 @@ export default function ToolRunner({ basePath }: Props) {
     try {
       const response = await request
       if (!response.ok) {
-        throw new Error(`Tool call failed (${response.status})`)
+        throw new Error(t.toolCallFailedWithCode(response.status))
       }
       setResult(await response.json())
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Tool call failed.')
+      setError(requestError instanceof Error ? requestError.message : t.callFailed)
     } finally {
       setLoading(false)
     }
@@ -37,20 +64,20 @@ export default function ToolRunner({ basePath }: Props) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="mb-2 text-lg font-medium text-slate-800">Available Tools</h3>
+        <h3 className="mb-2 text-lg font-medium text-slate-800">{t.availableTools}</h3>
         <ul className="list-disc pl-5 text-slate-700">
           {tools.map((tool) => (
             <li key={tool.name}>
               <span className="font-semibold">{tool.name}</span> — {tool.description}
             </li>
           ))}
-          {tools.length === 0 && <li className="text-slate-500">No tools available</li>}
+          {tools.length === 0 && <li className="text-slate-500">{t.noTools}</li>}
         </ul>
       </div>
 
       <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Echo payload (JSON)</label>
+          <label className="block text-sm font-medium text-slate-700">{t.echoPayload}</label>
           <input
             value={echo}
             onChange={(e) => setEcho(e.target.value)}
@@ -75,12 +102,12 @@ export default function ToolRunner({ basePath }: Props) {
               }))
             }}
           >
-            {loading ? 'Running…' : 'Run echo'}
+            {loading ? t.running : t.runEcho}
           </button>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Summarize text</label>
+          <label className="block text-sm font-medium text-slate-700">{t.summarizeText}</label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -98,12 +125,12 @@ export default function ToolRunner({ basePath }: Props) {
               }))
             }}
           >
-            {loading ? 'Running…' : 'Run summarize'}
+            {loading ? t.running : t.runSummarize}
           </button>
         </div>
 
         {error && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
-        {result && <pre className="overflow-auto rounded-lg bg-slate-900 p-3 text-sm text-slate-100">{JSON.stringify(result, null, 2)}</pre>}
+        {result !== null && <pre className="overflow-auto rounded-lg bg-slate-900 p-3 text-sm text-slate-100">{JSON.stringify(result, null, 2)}</pre>}
       </div>
     </div>
   )

@@ -1,0 +1,7 @@
+slug,image_url,expected_label,source,local_path,status,error
+novus_banana_baby,https://img2.zakaz.ua/upload.version_1.0.77bbb17d1dc547efa3c6c7eaafe473f2.1350x1350.jpeg,Banana,novus similar from banana page,data/new_store_images/holdout/images/novus_banana_baby.jpeg,ok,
+novus_yellow_pepper_import,https://img2.zakaz.ua/upload.version_1.0.3629b31e29121f9ea8d99e59d84eb565.1350x1350.jpeg,Yellow Bell Pepper,novus similar from banana page,data/new_store_images/holdout/images/novus_yellow_pepper_import.jpeg,ok,
+novus_beet_washed,https://img2.zakaz.ua/novus20201103.1604398501.ad72436478c_2020-11-03_Alina/novus20201103.1604398501.SNCPSG10.obj.0.1.jpg.oe.jpg.pf.jpg.1350nowm.jpg.1350x.jpg,Red Beet,novus similar from banana page,data/new_store_images/holdout/images/novus_beet_washed.jpg,ok,
+metro_pineapple_ready_to_eat,https://img2.zakaz.ua/8dd42019bb1242b6b604ec2b53ffb8e7/1752665785-s1350x1350.jpg,Pineapple,metro similar from mango page,data/new_store_images/holdout/images/metro_pineapple_ready_to_eat.jpg,ok,
+metro_kiwi_in_basket,https://img3.zakaz.ua/e92accae9bc64248a0a1e970922e14c8/1737987085-s1350x1350.jpg,Kiwi,metro similar from mango page,data/new_store_images/holdout/images/metro_kiwi_in_basket.jpg,ok,
+metro_avocado_alt,https://img3.zakaz.ua/7df0ecb1ec2f4164bb7fe0a71f9dcae8/1763717629-s1350x1350.jpg,Avocado,metro similar from mango page,data/new_store_images/holdout/images/metro_avocado_alt.jpg,ok,

@@ -1,0 +1,9 @@
+slug,image_url,local_path,status,error
+person_obama,https://upload.wikimedia.org/wikipedia/commons/8/8d/President_Barack_Obama.jpg,data/new_store_images/negatives/images/person_obama.jpg,ok,
+person_astronaut,https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg,data/new_store_images/negatives/images/person_astronaut.jpg,ok,
+dog,https://upload.wikimedia.org/wikipedia/commons/6/6e/Golde33443.jpg,data/new_store_images/negatives/images/dog.jpg,ok,
+cat,https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg,data/new_store_images/negatives/images/cat.jpg,ok,
+car,https://upload.wikimedia.org/wikipedia/commons/8/8f/2018_Toyota_Camry_SE%2C_front_1.29.20.jpg,,download_error,HTTP Error 404: Not Found
+city,https://upload.wikimedia.org/wikipedia/commons/a/a1/NYC_Montage_2014_4_-_Jleon.jpg,,download_error,HTTP Error 404: Not Found
+office,https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg,data/new_store_images/negatives/images/office.jpg,ok,
+random_art,https://upload.wikimedia.org/wikipedia/commons/0/02/Mona_Lisa.jpg,,download_error,HTTP Error 404: Not Found

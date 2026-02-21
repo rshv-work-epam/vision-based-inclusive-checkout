@@ -1,4 +1,5 @@
 import { ChangeEvent, useEffect, useRef, useState, type CSSProperties } from 'react'
+import type { Language } from '../App'
 
 type Prediction = {
   label: string
@@ -8,7 +9,81 @@ type Prediction = {
 
 type PredictResult = { predictions: Prediction[] }
 
-export default function Recognize() {
+const TEXT = {
+  uk: {
+    couldNotCaptureFrame: 'Не вдалося зчитати кадр із вебкамери.',
+    couldNotCaptureImage: 'Не вдалося захопити кадр із вебкамери.',
+    inferenceFailedWithCode: (code: number) => `Інференс не вдався (${code})`,
+    couldNotRunLiveRecognition: 'Не вдалося виконати розпізнавання в реальному часі.',
+    couldNotRunRecognition: 'Не вдалося виконати розпізнавання.',
+    couldNotAccessWebcam: 'Не вдалося отримати доступ до вебкамери.',
+    taskCreationFailedWithCode: (code: number) => `Не вдалося створити завдання (${code})`,
+    couldNotCreateTask: 'Не вдалося створити завдання на перевірку.',
+    reviewTaskCreated: 'Завдання на перевірку успішно створено.',
+    liveError: 'Помилка в live-режимі',
+    liveStarting: 'Live-розпізнавання: запуск…',
+    detected: 'Виявлено',
+    noConfidentMatch: 'Немає впевненого збігу',
+    uploadTitle: 'Завантаження зображення товару',
+    uploadDescription: 'Оберіть фото товару. Модель поверне мітку та рівень впевненості.',
+    productImage: 'Зображення товару',
+    useWebcam: 'Використати вебкамеру',
+    startWebcam: 'Увімкнути вебкамеру',
+    stopWebcam: 'Вимкнути вебкамеру',
+    captureFrame: 'Захопити кадр',
+    liveRecognition: 'Live-розпізнавання',
+    recognizing: 'Розпізнавання…',
+    recognize: 'Розпізнати',
+    predictionTitle: 'Прогноз',
+    noImageSelected: 'Зображення ще не вибрано.',
+    topPrediction: 'Найкращий прогноз',
+    confidence: 'Впевненість',
+    creating: 'Створення…',
+    createReviewTask: 'Створити завдання на перевірку',
+    noPredictionYet: 'Поки немає прогнозу.',
+    previewAlt: 'Попередній перегляд обраного товару',
+    bboxLabel: 'Рамка виявленого обʼєкта'
+  },
+  en: {
+    couldNotCaptureFrame: 'Could not capture a frame from webcam.',
+    couldNotCaptureImage: 'Could not capture an image from webcam.',
+    inferenceFailedWithCode: (code: number) => `Inference failed (${code})`,
+    couldNotRunLiveRecognition: 'Could not run live recognition.',
+    couldNotRunRecognition: 'Could not run recognition.',
+    couldNotAccessWebcam: 'Could not access webcam.',
+    taskCreationFailedWithCode: (code: number) => `Task creation failed (${code})`,
+    couldNotCreateTask: 'Could not create a review task.',
+    reviewTaskCreated: 'Review task created successfully.',
+    liveError: 'Live error',
+    liveStarting: 'Live recognition: starting…',
+    detected: 'Detected',
+    noConfidentMatch: 'No confident match',
+    uploadTitle: 'Upload Product Image',
+    uploadDescription: 'Choose a product image. The model predicts a product label and confidence score.',
+    productImage: 'Product image',
+    useWebcam: 'Use webcam',
+    startWebcam: 'Start webcam',
+    stopWebcam: 'Stop webcam',
+    captureFrame: 'Capture frame',
+    liveRecognition: 'Live recognition',
+    recognizing: 'Recognizing…',
+    recognize: 'Recognize',
+    predictionTitle: 'Prediction',
+    noImageSelected: 'No image selected yet.',
+    topPrediction: 'Top prediction',
+    confidence: 'Confidence',
+    creating: 'Creating…',
+    createReviewTask: 'Create Review Task',
+    noPredictionYet: 'No prediction yet.',
+    previewAlt: 'Selected product preview',
+    bboxLabel: 'Predicted object bounding box'
+  }
+} as const
+
+type Props = { language: Language }
+
+export default function Recognize({ language }: Props) {
+  const t = TEXT[language]
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -81,7 +156,7 @@ export default function Recognize() {
         canvas.height = video.videoHeight
         const context = canvas.getContext('2d')
         if (!context) {
-          throw new Error('Could not capture a frame from webcam.')
+          throw new Error(t.couldNotCaptureFrame)
         }
 
         context.drawImage(video, 0, 0, canvas.width, canvas.height)
@@ -90,7 +165,7 @@ export default function Recognize() {
           canvas.toBlob(resolve, 'image/jpeg', 0.9)
         })
         if (!blob) {
-          throw new Error('Could not capture a frame from webcam.')
+          throw new Error(t.couldNotCaptureFrame)
         }
 
         const formData = new FormData()
@@ -101,7 +176,7 @@ export default function Recognize() {
           signal: controller.signal
         })
         if (!response.ok) {
-          throw new Error(`Inference failed (${response.status})`)
+          throw new Error(t.inferenceFailedWithCode(response.status))
         }
         const data = (await response.json()) as PredictResult
         if (!cancelled) {
@@ -111,7 +186,7 @@ export default function Recognize() {
       } catch (caughtError: unknown) {
         if (!cancelled) {
           if (caughtError instanceof DOMException && caughtError.name === 'AbortError') return
-          setLiveError(caughtError instanceof Error ? caughtError.message : 'Could not run live recognition.')
+          setLiveError(caughtError instanceof Error ? caughtError.message : t.couldNotRunLiveRecognition)
         }
       } finally {
         if (!cancelled) liveBusyRef.current = false
@@ -153,12 +228,12 @@ export default function Recognize() {
       formData.append('file', file)
       const response = await fetch('/api/inference/predict', { method: 'POST', body: formData })
       if (!response.ok) {
-        throw new Error(`Inference failed (${response.status})`)
+        throw new Error(t.inferenceFailedWithCode(response.status))
       }
       const data = (await response.json()) as PredictResult
       setResult(data)
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Could not run recognition.')
+      setError(submitError instanceof Error ? submitError.message : t.couldNotRunRecognition)
     } finally {
       setIsSubmitting(false)
     }
@@ -172,7 +247,7 @@ export default function Recognize() {
       setMediaStream(stream)
       setWebcamError(null)
     } catch (error) {
-      setWebcamError(error instanceof Error ? error.message : 'Could not access webcam.')
+      setWebcamError(error instanceof Error ? error.message : t.couldNotAccessWebcam)
     }
   }
 
@@ -198,7 +273,7 @@ export default function Recognize() {
     })
 
     if (!blob) {
-      setWebcamError('Could not capture an image from webcam.')
+      setWebcamError(t.couldNotCaptureImage)
       return
     }
 
@@ -234,11 +309,11 @@ export default function Recognize() {
       })
 
       if (!response.ok) {
-        throw new Error(`Task creation failed (${response.status})`)
+        throw new Error(t.taskCreationFailedWithCode(response.status))
       }
-      setTaskStatus('Review task created successfully.')
+      setTaskStatus(t.reviewTaskCreated)
     } catch (createError) {
-      setTaskStatus(createError instanceof Error ? createError.message : 'Could not create a review task.')
+      setTaskStatus(createError instanceof Error ? createError.message : t.couldNotCreateTask)
     } finally {
       setIsCreatingTask(false)
     }
@@ -250,10 +325,10 @@ export default function Recognize() {
   const liveConfidencePct = liveTopPrediction ? (liveTopPrediction.confidence * 100).toFixed(1) : null
   const liveOverlayText = (() => {
     if (!mediaStream || !liveEnabled) return null
-    if (liveError) return `Live error: ${liveError}`
-    if (!liveResult) return 'Live recognition: starting…'
-    if (liveTopPrediction && liveConfidencePct) return `Detected: ${liveTopPrediction.label} (${liveConfidencePct}%)`
-    return 'No confident match'
+    if (liveError) return `${t.liveError}: ${liveError}`
+    if (!liveResult) return t.liveStarting
+    if (liveTopPrediction && liveConfidencePct) return `${t.detected}: ${liveTopPrediction.label} (${liveConfidencePct}%)`
+    return t.noConfidentMatch
   })()
 
   const overlayStyle = (() => {
@@ -277,12 +352,12 @@ export default function Recognize() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="text-lg font-medium text-slate-800">Upload Product Image</h3>
-        <p className="text-sm text-slate-600">Choose a product image. The model predicts a product label and confidence score.</p>
-        <label className="block text-sm font-medium text-slate-700" htmlFor="product-image">Product image</label>
+        <h3 className="text-lg font-medium text-slate-800">{t.uploadTitle}</h3>
+        <p className="text-sm text-slate-600">{t.uploadDescription}</p>
+        <label className="block text-sm font-medium text-slate-700" htmlFor="product-image">{t.productImage}</label>
         <input id="product-image" type="file" accept="image/*" onChange={onFileChange} className="w-full rounded-lg border border-slate-200 p-2" />
         <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p className="text-sm font-medium text-slate-700">Use webcam</p>
+          <p className="text-sm font-medium text-slate-700">{t.useWebcam}</p>
           <div className="relative">
             <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border border-slate-200 bg-black" />
             {liveOverlayText && (
@@ -298,7 +373,7 @@ export default function Recognize() {
               disabled={!!mediaStream}
               className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Start webcam
+              {t.startWebcam}
             </button>
             <button
               type="button"
@@ -306,7 +381,7 @@ export default function Recognize() {
               disabled={!mediaStream}
               className="rounded-lg bg-slate-500 px-3 py-2 text-sm text-white transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Stop webcam
+              {t.stopWebcam}
             </button>
             <button
               type="button"
@@ -314,7 +389,7 @@ export default function Recognize() {
               disabled={!mediaStream}
               className="rounded-lg bg-indigo-500 px-3 py-2 text-sm text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Capture frame
+              {t.captureFrame}
             </button>
             <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm text-slate-700 shadow-sm">
               <input
@@ -324,7 +399,7 @@ export default function Recognize() {
                 onChange={(event) => setLiveEnabled(event.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
               />
-              Live recognition
+              {t.liveRecognition}
             </label>
           </div>
           {webcamError && <p className="rounded-lg bg-rose-50 p-2 text-sm text-rose-700">{webcamError}</p>}
@@ -334,21 +409,21 @@ export default function Recognize() {
           onClick={submit}
           className="rounded-lg bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? 'Recognizing…' : 'Recognize'}
+          {isSubmitting ? t.recognizing : t.recognize}
         </button>
         {error && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
         {taskStatus && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{taskStatus}</p>}
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="text-lg font-medium text-slate-800">Prediction</h3>
+        <h3 className="text-lg font-medium text-slate-800">{t.predictionTitle}</h3>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
             {preview ? (
               <div className="relative inline-block overflow-hidden rounded-lg border border-slate-200">
                 <img
                   src={preview}
-                  alt="Selected product preview"
+                  alt={t.previewAlt}
                   className="max-w-full h-auto"
                   onLoad={(event) => {
                     const image = event.currentTarget
@@ -356,10 +431,10 @@ export default function Recognize() {
                     setDisplayDims({ w: image.clientWidth, h: image.clientHeight })
                   }}
                 />
-                {overlayStyle && <div style={overlayStyle} aria-label="Predicted object bounding box" />}
+                {overlayStyle && <div style={overlayStyle} aria-label={t.bboxLabel} />}
               </div>
             ) : (
-              <p className="text-slate-500">No image selected yet.</p>
+              <p className="text-slate-500">{t.noImageSelected}</p>
             )}
           </div>
           <div>
@@ -367,9 +442,9 @@ export default function Recognize() {
               <div className="space-y-3">
                 {topPrediction && (
                   <div className="rounded-lg bg-slate-50 p-3">
-                    <p className="text-sm text-slate-600">Top prediction</p>
+                    <p className="text-sm text-slate-600">{t.topPrediction}</p>
                     <p className="text-lg font-semibold text-slate-800">{topPrediction.label}</p>
-                    <p className="text-sm text-slate-600">Confidence: {confidencePct}%</p>
+                    <p className="text-sm text-slate-600">{t.confidence}: {confidencePct}%</p>
                   </div>
                 )}
                 <pre className="overflow-auto rounded-lg bg-slate-900 p-3 text-sm text-slate-100">{JSON.stringify(result, null, 2)}</pre>
@@ -378,11 +453,11 @@ export default function Recognize() {
                   disabled={!topPrediction || isCreatingTask}
                   className="rounded-lg bg-emerald-600 px-4 py-2 text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isCreatingTask ? 'Creating…' : 'Create Review Task'}
+                  {isCreatingTask ? t.creating : t.createReviewTask}
                 </button>
               </div>
             ) : (
-              <p className="text-slate-500">No prediction yet.</p>
+              <p className="text-slate-500">{t.noPredictionYet}</p>
             )}
           </div>
         </div>

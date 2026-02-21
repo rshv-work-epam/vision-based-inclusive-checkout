@@ -123,6 +123,25 @@ PYTHONPATH=services/operator-assistant pytest -q services/operator-assistant/tes
 npm --prefix web/ui run build
 ```
 
+### Evaluate local inference quality (store data + false positives)
+
+Run this after `docker compose up -d`:
+
+```bash
+python scripts/evaluate_inference_dataset.py \
+  --endpoint http://localhost:8002/predict \
+  --positive-manifest data/new_store_images/manifest.csv \
+  --positive-manifest data/new_store_images/holdout/manifest.csv \
+  --negative-manifest data/new_store_images/negatives_v2/manifest.csv \
+  --min-positive-accuracy 0.95 \
+  --max-negative-fp-rate 0.10
+```
+
+Generated artifacts:
+
+- `data/new_store_images/eval_predictions.csv`
+- `data/new_store_images/eval_summary.json`
+
 ---
 
 ## Deployment (Azure)

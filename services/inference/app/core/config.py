@@ -82,6 +82,27 @@ class Settings(BaseSettings):
         default=0.23,
         validation_alias=AliasChoices("VBIC_HUE_SCALE", "HUE_SCALE"),
     )
+    # Guardrail for false positives: top match must have at least this ORB support.
+    min_top_orb_confidence: float = Field(
+        default=0.025,
+        validation_alias=AliasChoices(
+            "VBIC_MIN_TOP_ORB_CONFIDENCE",
+            "MIN_TOP_ORB_CONFIDENCE",
+        ),
+    )
+    # Optional extra guardrail: top score must beat second score by this margin.
+    min_score_margin: float = Field(
+        default=0.03,
+        validation_alias=AliasChoices("VBIC_MIN_SCORE_MARGIN", "MIN_SCORE_MARGIN"),
+    )
+    # Collapses generated labels like "Banana Dataset" / "Banana Variant 2" to "Banana".
+    canonicalize_variant_labels: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "VBIC_CANONICALIZE_VARIANT_LABELS",
+            "CANONICALIZE_VARIANT_LABELS",
+        ),
+    )
     # Center-crop fraction applied before feature extraction (ORB + color hist).
     # Helps reduce background-driven misclassifications in live webcam frames.
     center_crop_frac: float = Field(

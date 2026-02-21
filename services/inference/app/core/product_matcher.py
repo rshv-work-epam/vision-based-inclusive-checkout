@@ -1,5 +1,6 @@
 import csv
 import logging
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -12,6 +13,9 @@ from .config import get_settings
 logger = logging.getLogger(__name__)
 
 _ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png"}
+_VARIANT_SUFFIX_RE = re.compile(
+    r"(?:\s+Dataset|\s+Variant\s+\d+)\s*$", re.IGNORECASE
+)
 
 
 def _decode_image_bytes_to_bgr(data: bytes) -> np.ndarray | None:
@@ -59,7 +63,14 @@ class _IndexedSku:
     sku: str
     label: str
     descriptors: list[np.ndarray]
-    hue_hist: np.ndarray | None
+    hue_hists: list[np.ndarray]
+
+@dataclass(frozen=True)
+class _ScoredLabel:
+    label: str
+    confidence: float
+    orb_confidence: float
+    hue_confidence: float
 
 
 class ProductMatcher:
@@ -78,6 +89,9 @@ class ProductMatcher:
         hue_sat_min: int,
         hue_val_min: int,
         hue_scale: float,
+        min_top_orb_confidence: float,
+        min_score_margin: float,
+        canonicalize_variant_labels: bool,
         center_crop_frac: float,
     ) -> None:
         self._catalog_csv_path = Path(catalog_csv_path)
@@ -92,6 +106,9 @@ class ProductMatcher:
         self._hue_sat_min = int(max(0, min(255, hue_sat_min)))
         self._hue_val_min = int(max(0, min(255, hue_val_min)))
         self._hue_scale = float(max(0.0, min(1.0, hue_scale)))
+        self._min_top_orb_confidence = float(max(0.0, min(1.0, min_top_orb_confidence)))
+        self._min_score_margin = float(max(0.0, min(1.0, min_score_margin)))
+        self._canonicalize_variant_labels = bool(canonicalize_variant_labels)
         # Clamp to a sane range; too small crops can cause unstable ORB scores.
         self._center_crop_frac = float(max(0.0, min(1.0, center_crop_frac)))
 
@@ -150,8 +167,7 @@ class ProductMatcher:
             label = sku_to_label.get(sku, sku)
 
             descriptors: list[np.ndarray] = []
-            hue_acc: np.ndarray | None = None
-            hue_count = 0
+            hue_hists: list[np.ndarray] = []
             for image_path in sorted(p for p in sku_dir.iterdir() if p.is_file()):
                 if image_path.suffix.lower() not in _ALLOWED_IMAGE_EXTS:
                     continue
@@ -176,24 +192,15 @@ class ProductMatcher:
 
                 hue_hist = self._compute_hue_hist(bgr)
                 if hue_hist is not None:
-                    if hue_acc is None:
-                        hue_acc = hue_hist.copy()
-                    else:
-                        hue_acc += hue_hist
-                    hue_count += 1
+                    hue_hists.append(hue_hist)
 
-            hue_avg = None
-            if hue_acc is not None and hue_count > 0:
-                hue_avg = hue_acc / float(hue_count)
-                cv2.normalize(hue_avg, hue_avg, norm_type=cv2.NORM_L1)
-
-            if descriptors or hue_avg is not None:
+            if descriptors or hue_hists:
                 indexed.append(
                     _IndexedSku(
                         sku=sku,
                         label=label,
                         descriptors=descriptors,
-                        hue_hist=hue_avg,
+                        hue_hists=hue_hists,
                     )
                 )
 
@@ -221,6 +228,12 @@ class ProductMatcher:
                 good_unique.add(int(m.trainIdx))
         return len(good_unique)
 
+    def _canonical_label(self, label: str) -> str:
+        if not self._canonicalize_variant_labels:
+            return label
+        canonical = _VARIANT_SUFFIX_RE.sub("", label).strip()
+        return canonical or label
+
     def predict(self, bgr: np.ndarray) -> list[dict]:
         if not self._index:
             return []
@@ -236,7 +249,7 @@ class ProductMatcher:
         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
         ratio = self._orb_ratio_test
 
-        scored: list[tuple[_IndexedSku, float]] = []
+        scored: list[_ScoredLabel] = []
         for sku in self._index:
             best_orb = 0.0
             if query_desc is not None and len(query_desc) > 0 and sku.descriptors:
@@ -248,34 +261,90 @@ class ProductMatcher:
                         best_orb = confidence
 
             hue_score = 0.0
-            if query_hue is not None and sku.hue_hist is not None:
-                dist = cv2.compareHist(query_hue, sku.hue_hist, cv2.HISTCMP_BHATTACHARYYA)
-                hue_score = 1.0 - float(dist)
-                if hue_score < 0.0:
-                    hue_score = 0.0
-                if hue_score > 1.0:
-                    hue_score = 1.0
+            if query_hue is not None and sku.hue_hists:
+                for ref_hue in sku.hue_hists:
+                    dist = cv2.compareHist(query_hue, ref_hue, cv2.HISTCMP_BHATTACHARYYA)
+                    score = 1.0 - float(dist)
+                    if score < 0.0:
+                        score = 0.0
+                    if score > 1.0:
+                        score = 1.0
+                    if score > hue_score:
+                        hue_score = score
 
             confidence = max(best_orb, self._hue_scale * hue_score)
             if confidence > 0.0:
-                scored.append((sku, confidence))
+                scored.append(
+                    _ScoredLabel(
+                        label=self._canonical_label(sku.label),
+                        confidence=float(confidence),
+                        orb_confidence=float(best_orb),
+                        hue_confidence=float(hue_score),
+                    )
+                )
 
         if not scored:
+            logger.info("Matcher produced no candidate scores.")
             return []
 
-        scored.sort(key=lambda item: item[1], reverse=True)
-        if scored[0][1] < self._min_confidence:
+        # Merge duplicate or generated variant labels to reduce ambiguity.
+        merged: dict[str, _ScoredLabel] = {}
+        for item in scored:
+            prev = merged.get(item.label)
+            if prev is None or item.confidence > prev.confidence:
+                merged[item.label] = item
+
+        ranked = sorted(merged.values(), key=lambda item: item.confidence, reverse=True)
+        top = ranked[0]
+        margin = (
+            top.confidence - ranked[1].confidence if len(ranked) > 1 else top.confidence
+        )
+        preview = ", ".join(
+            (
+                f"{item.label}:c={item.confidence:.3f},"
+                f"orb={item.orb_confidence:.3f},hue={item.hue_confidence:.3f}"
+            )
+            for item in ranked[:3]
+        )
+        logger.info("Matcher top candidates: %s | margin=%.4f", preview, margin)
+
+        if top.confidence < self._min_confidence:
+            logger.info(
+                "Matcher rejected top candidate by min_confidence: top=%.4f threshold=%.4f",
+                top.confidence,
+                self._min_confidence,
+            )
+            return []
+        if top.orb_confidence < self._min_top_orb_confidence:
+            logger.info(
+                "Matcher rejected top candidate by min_top_orb_confidence: top_orb=%.4f threshold=%.4f",
+                top.orb_confidence,
+                self._min_top_orb_confidence,
+            )
+            return []
+        if len(ranked) > 1 and margin < self._min_score_margin:
+            logger.info(
+                "Matcher rejected top candidate by min_score_margin: margin=%.4f threshold=%.4f",
+                margin,
+                self._min_score_margin,
+            )
             return []
 
         predictions: list[dict] = []
-        for sku, confidence in scored[: self._top_k]:
+        for item in ranked[: self._top_k]:
             predictions.append(
                 {
-                    "label": sku.label,
-                    "confidence": float(confidence),
+                    "label": item.label,
+                    "confidence": float(item.confidence),
                     "box": None,
                 }
             )
+        logger.info(
+            "Matcher accepted label=%s confidence=%.4f margin=%.4f",
+            top.label,
+            top.confidence,
+            margin,
+        )
         return predictions
 
 
@@ -295,5 +364,8 @@ def get_product_matcher() -> ProductMatcher:
         hue_sat_min=s.hue_sat_min,
         hue_val_min=s.hue_val_min,
         hue_scale=s.hue_scale,
+        min_top_orb_confidence=s.min_top_orb_confidence,
+        min_score_margin=s.min_score_margin,
+        canonicalize_variant_labels=s.canonicalize_variant_labels,
         center_crop_frac=s.center_crop_frac,
     )

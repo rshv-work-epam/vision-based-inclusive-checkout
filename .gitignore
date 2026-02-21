@@ -208,3 +208,10 @@ __marimo__/
 
 # External datasets (cloned repos, not tracked)
 data/external/
+
+# Local dev dependencies/environments
+.venv*/
+web/ui/node_modules/
+
+# MacOS metadata
+.DS_Store

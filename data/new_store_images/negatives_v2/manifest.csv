@@ -1,0 +1,16 @@
+slug,url,local_path,status,error
+bus_people,https://raw.githubusercontent.com/ultralytics/yolov5/master/data/images/bus.jpg,data/new_store_images/negatives_v2/images/bus_people.jpg,ok,
+zidane_people,https://raw.githubusercontent.com/ultralytics/yolov5/master/data/images/zidane.jpg,data/new_store_images/negatives_v2/images/zidane_people.jpg,ok,
+dog,https://raw.githubusercontent.com/pytorch/hub/master/images/dog.jpg,data/new_store_images/negatives_v2/images/dog.jpg,ok,
+horse_rider,https://raw.githubusercontent.com/pytorch/hub/master/images/deeplab1.png,data/new_store_images/negatives_v2/images/horse_rider.png,ok,
+lena_face,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg,data/new_store_images/negatives_v2/images/lena_face.jpg,ok,
+graf1_building,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/graf1.png,data/new_store_images/negatives_v2/images/graf1_building.png,ok,
+graf3_building,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/graf3.png,data/new_store_images/negatives_v2/images/graf3_building.png,ok,
+sudoku_board,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/sudoku.png,data/new_store_images/negatives_v2/images/sudoku_board.png,ok,
+chessboard,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/chessboard.png,data/new_store_images/negatives_v2/images/chessboard.png,ok,
+smarties,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/smarties.png,data/new_store_images/negatives_v2/images/smarties.png,ok,
+fruits_mix,https://raw.githubusercontent.com/opencv/opencv/master/samples/data/fruits.jpg,data/new_store_images/negatives_v2/images/fruits_mix.jpg,ok,
+messi,https://raw.githubusercontent.com/ultralytics/yolov5/master/data/images/zidane.jpg,data/new_store_images/negatives_v2/images/messi.jpg,ok,
+obama,https://upload.wikimedia.org/wikipedia/commons/8/8d/President_Barack_Obama.jpg,data/new_store_images/negatives_v2/images/obama.jpg,ok,
+cat,https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg,data/new_store_images/negatives_v2/images/cat.jpg,ok,
+nyc,https://upload.wikimedia.org/wikipedia/commons/a/a1/NYC_Montage_2014_4_-_Jleon.jpg,,download_error,HTTP Error 404: Not Found

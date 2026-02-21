@@ -1,0 +1,6 @@
+slug,prediction_count,top1,c1,top2,c2,margin,raw
+person_obama,0,,0.0,,0.0,0.0,[]
+person_astronaut,3,Red Delicious,0.2059,Royal Gala,0.1852,0.0207,"[{""label"": ""Red Delicious"", ""confidence"": 0.20588235294117646, ""box"": null}, {""label"": ""Royal Gala"", ""confidence"": 0.18518518518518517, ""box"": null}, {""label"": ""Red Grapefruit"", ""confidence"": 0.13333333333333333, ""box"": null}]"
+dog,3,Papaya,0.1468,Arla Ecological Medium Fat Milk,0.1403,0.0066,"[{""label"": ""Papaya"", ""confidence"": 0.14684484749935406, ""box"": null}, {""label"": ""Arla Ecological Medium Fat Milk"", ""confidence"": 0.1402852905393884, ""box"": null}, {""label"": ""Honeydew Melon"", ""confidence"": 0.13846153846153847, ""box"": null}]"
+cat,3,Red Beet,0.2148,Yellow Onion,0.202,0.0127,"[{""label"": ""Red Beet"", ""confidence"": 0.21477621065650682, ""box"": null}, {""label"": ""Yellow Onion"", ""confidence"": 0.20203402083313116, ""box"": null}, {""label"": ""Ginger"", ""confidence"": 0.1998337409568646, ""box"": null}]"
+office,3,Oatly Oat Milk,0.1641,Red Grapefruit,0.1429,0.0213,"[{""label"": ""Oatly Oat Milk"", ""confidence"": 0.16410734271877214, ""box"": null}, {""label"": ""Red Grapefruit"", ""confidence"": 0.14285714285714285, ""box"": null}, {""label"": ""Sweet Potato"", ""confidence"": 0.12878787878787878, ""box"": null}]"

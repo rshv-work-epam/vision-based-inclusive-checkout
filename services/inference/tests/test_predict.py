@@ -95,3 +95,40 @@ def test_predict_no_confident_match(monkeypatch, tmp_path):
     assert r.status_code == 200
     payload = r.json()
     assert payload["predictions"] == []
+
+
+def test_predict_rejects_ambiguous_top_match_with_margin_gate(monkeypatch, tmp_path):
+    catalog = tmp_path / "catalog.csv"
+    catalog.write_text(
+        "sku,name,price_cents\n1001,Apple,50\n1002,Banana,30\n", encoding="utf-8"
+    )
+
+    images = tmp_path / "images"
+    apple_dir = images / "1001"
+    banana_dir = images / "1002"
+    apple_dir.mkdir(parents=True)
+    banana_dir.mkdir(parents=True)
+
+    # Use the exact same reference image for two labels so the confidence margin is ~0.
+    shared_reference = _encode_jpeg(_make_reference_image("FRUIT"))
+    (apple_dir / "ref.jpg").write_bytes(shared_reference)
+    (banana_dir / "ref.jpg").write_bytes(shared_reference)
+
+    monkeypatch.setenv("VBIC_CATALOG_CSV_PATH", str(catalog))
+    monkeypatch.setenv("VBIC_REFERENCE_IMAGES_DIR", str(images))
+    monkeypatch.setenv("VBIC_MIN_REF_DESCRIPTORS", "0")
+    monkeypatch.setenv("VBIC_MIN_CONFIDENCE", "0.05")
+    monkeypatch.setenv("VBIC_MIN_TOP_ORB_CONFIDENCE", "0.0")
+    monkeypatch.setenv("VBIC_MIN_SCORE_MARGIN", "0.05")
+
+    get_settings.cache_clear()
+    get_product_matcher.cache_clear()
+
+    client = TestClient(app)
+    r = client.post(
+        "/predict",
+        files={"file": ("query.jpg", io.BytesIO(shared_reference), "image/jpeg")},
+    )
+    assert r.status_code == 200
+    payload = r.json()
+    assert payload["predictions"] == []
